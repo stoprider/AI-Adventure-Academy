@@ -1,0 +1,8 @@
+export function StatPill({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</div>
+      <div className="mt-1 text-xl font-bold text-white">{value}</div>
+    </div>
+  );
+}
