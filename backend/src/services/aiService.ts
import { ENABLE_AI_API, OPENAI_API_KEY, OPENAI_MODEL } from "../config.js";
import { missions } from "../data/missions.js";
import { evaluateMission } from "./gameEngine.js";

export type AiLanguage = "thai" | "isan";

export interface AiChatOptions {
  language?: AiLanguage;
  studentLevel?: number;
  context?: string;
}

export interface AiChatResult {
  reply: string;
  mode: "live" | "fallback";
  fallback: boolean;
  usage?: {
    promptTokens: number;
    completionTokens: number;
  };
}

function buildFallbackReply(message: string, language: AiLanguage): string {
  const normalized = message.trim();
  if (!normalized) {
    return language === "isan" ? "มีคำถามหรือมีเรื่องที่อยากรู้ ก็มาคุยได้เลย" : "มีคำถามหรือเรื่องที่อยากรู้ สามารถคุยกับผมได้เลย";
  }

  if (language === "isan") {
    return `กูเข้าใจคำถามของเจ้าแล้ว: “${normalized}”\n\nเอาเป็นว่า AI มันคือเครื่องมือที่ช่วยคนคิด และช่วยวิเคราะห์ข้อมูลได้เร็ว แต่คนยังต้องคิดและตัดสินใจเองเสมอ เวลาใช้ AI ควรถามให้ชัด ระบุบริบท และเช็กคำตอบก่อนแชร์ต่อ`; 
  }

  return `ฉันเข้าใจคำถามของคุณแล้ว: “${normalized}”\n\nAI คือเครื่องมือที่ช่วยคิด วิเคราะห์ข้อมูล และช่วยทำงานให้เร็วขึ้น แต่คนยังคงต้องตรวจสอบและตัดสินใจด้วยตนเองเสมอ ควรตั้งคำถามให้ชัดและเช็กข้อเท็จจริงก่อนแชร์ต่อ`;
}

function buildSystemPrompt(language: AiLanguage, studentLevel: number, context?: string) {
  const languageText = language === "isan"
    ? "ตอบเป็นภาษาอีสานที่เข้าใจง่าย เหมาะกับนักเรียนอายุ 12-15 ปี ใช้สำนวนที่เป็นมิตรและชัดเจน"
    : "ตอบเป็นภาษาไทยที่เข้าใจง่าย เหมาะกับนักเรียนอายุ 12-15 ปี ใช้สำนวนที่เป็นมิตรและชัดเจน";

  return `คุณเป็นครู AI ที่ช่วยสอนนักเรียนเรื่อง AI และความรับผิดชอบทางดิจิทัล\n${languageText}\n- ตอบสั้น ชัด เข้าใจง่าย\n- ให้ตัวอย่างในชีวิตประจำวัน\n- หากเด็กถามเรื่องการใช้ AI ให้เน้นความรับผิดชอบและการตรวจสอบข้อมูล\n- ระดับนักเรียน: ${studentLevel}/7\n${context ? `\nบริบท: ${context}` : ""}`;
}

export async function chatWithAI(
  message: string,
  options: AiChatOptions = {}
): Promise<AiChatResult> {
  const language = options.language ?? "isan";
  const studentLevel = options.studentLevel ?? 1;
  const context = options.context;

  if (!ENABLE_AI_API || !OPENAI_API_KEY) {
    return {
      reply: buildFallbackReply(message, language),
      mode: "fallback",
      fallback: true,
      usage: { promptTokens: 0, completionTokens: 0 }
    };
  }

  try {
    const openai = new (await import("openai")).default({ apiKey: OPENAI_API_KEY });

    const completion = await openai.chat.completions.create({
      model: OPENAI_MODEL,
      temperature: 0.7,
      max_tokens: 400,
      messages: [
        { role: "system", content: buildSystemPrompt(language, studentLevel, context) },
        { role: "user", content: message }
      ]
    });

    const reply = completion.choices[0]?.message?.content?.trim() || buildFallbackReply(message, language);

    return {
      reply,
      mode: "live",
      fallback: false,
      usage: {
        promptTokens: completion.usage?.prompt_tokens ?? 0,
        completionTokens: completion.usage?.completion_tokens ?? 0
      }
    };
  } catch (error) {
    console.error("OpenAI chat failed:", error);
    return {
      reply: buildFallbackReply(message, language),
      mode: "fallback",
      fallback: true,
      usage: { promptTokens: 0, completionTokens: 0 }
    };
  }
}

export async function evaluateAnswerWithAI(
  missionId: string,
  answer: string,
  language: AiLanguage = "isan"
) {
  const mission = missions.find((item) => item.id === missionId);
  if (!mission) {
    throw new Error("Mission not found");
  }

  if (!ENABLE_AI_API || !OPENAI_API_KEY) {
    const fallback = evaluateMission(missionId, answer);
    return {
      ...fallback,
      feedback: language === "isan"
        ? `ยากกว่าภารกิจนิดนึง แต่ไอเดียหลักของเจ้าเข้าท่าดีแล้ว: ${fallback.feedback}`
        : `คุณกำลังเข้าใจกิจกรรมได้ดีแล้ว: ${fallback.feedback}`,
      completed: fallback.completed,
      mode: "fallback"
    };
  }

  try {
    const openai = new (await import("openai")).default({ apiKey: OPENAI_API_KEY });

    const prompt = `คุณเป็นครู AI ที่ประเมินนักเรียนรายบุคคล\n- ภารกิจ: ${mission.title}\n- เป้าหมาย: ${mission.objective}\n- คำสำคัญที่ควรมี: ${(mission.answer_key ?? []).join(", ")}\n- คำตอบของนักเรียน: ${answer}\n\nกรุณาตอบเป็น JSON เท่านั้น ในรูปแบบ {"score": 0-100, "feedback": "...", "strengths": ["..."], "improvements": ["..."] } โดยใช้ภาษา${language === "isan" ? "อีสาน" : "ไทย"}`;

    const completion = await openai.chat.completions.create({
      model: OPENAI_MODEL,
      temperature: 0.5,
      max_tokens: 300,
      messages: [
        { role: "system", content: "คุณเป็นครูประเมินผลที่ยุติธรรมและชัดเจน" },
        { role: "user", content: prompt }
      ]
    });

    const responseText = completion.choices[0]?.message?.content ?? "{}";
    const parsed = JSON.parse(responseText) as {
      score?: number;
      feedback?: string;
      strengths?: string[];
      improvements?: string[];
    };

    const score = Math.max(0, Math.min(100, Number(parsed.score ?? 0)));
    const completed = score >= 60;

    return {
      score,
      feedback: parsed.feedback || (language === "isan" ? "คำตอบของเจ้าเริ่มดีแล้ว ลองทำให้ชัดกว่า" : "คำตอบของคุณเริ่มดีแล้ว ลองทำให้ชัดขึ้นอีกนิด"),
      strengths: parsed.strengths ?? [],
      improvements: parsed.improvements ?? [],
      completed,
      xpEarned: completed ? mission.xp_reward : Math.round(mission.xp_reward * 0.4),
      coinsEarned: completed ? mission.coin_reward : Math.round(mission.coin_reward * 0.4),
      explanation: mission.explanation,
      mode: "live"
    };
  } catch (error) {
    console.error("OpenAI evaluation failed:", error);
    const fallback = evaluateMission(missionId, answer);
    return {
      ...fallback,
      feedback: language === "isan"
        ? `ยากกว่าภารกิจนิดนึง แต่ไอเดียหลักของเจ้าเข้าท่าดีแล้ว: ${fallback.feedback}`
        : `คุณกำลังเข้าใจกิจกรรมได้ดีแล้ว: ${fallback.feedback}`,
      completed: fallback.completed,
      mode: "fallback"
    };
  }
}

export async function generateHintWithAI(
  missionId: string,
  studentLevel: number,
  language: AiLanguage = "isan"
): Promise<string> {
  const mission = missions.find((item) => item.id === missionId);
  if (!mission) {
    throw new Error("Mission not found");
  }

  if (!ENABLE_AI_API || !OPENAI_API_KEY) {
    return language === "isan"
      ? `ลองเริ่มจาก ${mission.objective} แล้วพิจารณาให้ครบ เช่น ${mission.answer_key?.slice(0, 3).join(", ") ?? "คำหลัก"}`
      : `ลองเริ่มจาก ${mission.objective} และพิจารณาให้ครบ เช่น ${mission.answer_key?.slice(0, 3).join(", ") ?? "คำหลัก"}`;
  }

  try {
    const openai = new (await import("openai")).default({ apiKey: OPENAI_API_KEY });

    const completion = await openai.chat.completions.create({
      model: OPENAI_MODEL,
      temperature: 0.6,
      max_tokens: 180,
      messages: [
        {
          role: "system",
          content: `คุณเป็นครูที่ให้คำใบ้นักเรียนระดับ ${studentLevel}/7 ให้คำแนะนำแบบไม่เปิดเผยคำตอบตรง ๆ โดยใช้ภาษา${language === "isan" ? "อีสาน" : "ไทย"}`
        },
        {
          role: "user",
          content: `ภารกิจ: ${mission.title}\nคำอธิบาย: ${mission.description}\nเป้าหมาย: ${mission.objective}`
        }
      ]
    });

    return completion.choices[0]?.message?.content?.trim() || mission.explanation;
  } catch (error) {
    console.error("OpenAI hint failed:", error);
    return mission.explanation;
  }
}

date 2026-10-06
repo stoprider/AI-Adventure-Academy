@@ -28,7 +28,7 @@ aiRouter.post("/chat", async (req, res) => {
     const result = await chatWithAI(message, {
       language,
       studentLevel,
-      context: context || (mission ? `ภารกิจ: ${mission.title} — ${mission.description}` : undefined)
+      context: context || mission ? `ภารกิจ: ${mission?.title ?? ""} — ${mission?.description ?? ""}` : undefined
     });
 
     return res.json({
@@ -68,7 +68,7 @@ aiRouter.post("/evaluate", async (req, res) => {
 aiRouter.get("/hint/:missionId", async (req, res) => {
   try {
     const { missionId } = req.params;
-    const { language = "isan", playerLevel = "1" } = req.query as {
+    const { language = "isan", playerLevel = 1 } = req.query as {
       language?: "thai" | "isan";
       playerLevel?: string;
     };

@@ -1,42 +1,27 @@
-import { DailyChallenge, EvaluationResult, Mission, Player, ProgressItem } from "../types";
+import cors from "cors";
+import express from "express";
+import { CORS_ORIGIN } from "./config.js";
+import { initializeDatabase } from "./db/database.js";
+import "./db/seed.js";
+import { adminRouter } from "./routes/admin.js";
+import { aiRouter } from "./routes/ai.js";
+import { gameRouter } from "./routes/game.js";
+import { healthRouter } from "./routes/health.js";
+import { playerRouter } from "./routes/players.js";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+initializeDatabase();
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json"
-    },
-    ...init
-  });
+export const app = express();
 
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Request failed");
-  }
+app.use(cors({ origin: CORS_ORIGIN }));
+app.use(express.json());
 
-  return response.json() as Promise<T>;
-}
+app.get("/", (_req, res) => {
+  res.json({ name: "AI Adventure Academy API", version: "1.0.0" });
+});
 
-export const api = {
-  getMissions: () => request<{ missions: Mission[] }>("/game/missions"),
-  getDailyChallenge: () => request<{ challenge: DailyChallenge }>("/game/daily-challenge"),
-  getDetectSamples: () => request<{ samples: Array<{ id: string; type: string; content: string; answer: string; explanation: string }> }>("/game/detect-samples"),
-  evaluateMission: (missionId: string, answer: string) =>
-    request<EvaluationResult>("/game/evaluate", {
-      method: "POST",
-      body: JSON.stringify({ missionId, answer })
-    }),
-  createPlayer: (nickname: string) =>
-    request<{ player: Player }>("/players", {
-      method: "POST",
-      body: JSON.stringify({ nickname })
-    }),
-  getPlayer: (id: number) => request<{ player: Player; progress: ProgressItem[] }>(`/players/${id}`),
-  updateProgress: (playerId: number, payload: { missionId: string; score: number; completed: boolean; xpEarned: number; coinsEarned: number }) =>
-    request<{ player: Player; progress: ProgressItem[] }>(`/players/${playerId}/progress`, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    }),
-  getAdminStats: () => request<{ stats: Record<string, unknown>; players: Player[]; leaderboard: Player[] }>("/admin/stats")
-};
+app.use("/api/health", healthRouter);
+app.use("/api/game", gameRouter);
+app.use("/api/players", playerRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/ai", aiRouter);
